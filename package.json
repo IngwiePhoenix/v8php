@@ -1,0 +1,17 @@
+{
+  "name": "php_embed",
+  "version": "0.0.1",
+  "description": "Embedding PHP into nodejs thru the Embed-SAPI. Use with caution.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "node build.js"
+  },
+  "keywords": [
+    "php",
+    "embed",
+    "sapi"
+  ],
+  "author": "Ingwie Phoenix",
+  "license": "mit"
+}
