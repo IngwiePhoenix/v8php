@@ -1,36 +1,39 @@
 # v8php - Embed PHP into v8.
 
-This is simply a project to help me use PHP from within javascript. It requires that you have previously built PHP with embed-sapi and maintainer-zts enabled.
+This is a work-in-progress project, that will allow you to create and use a PHP instance from within nodejs, in order to enhance interaction with the two different worlds. The API will be designed to be async and modeled after `child_process.spawn`.
 
-## To use...
+## Features I want to implement
+- Creating a new PHP instance, even simultanous ones. That means, that I need to find a precise way to connect one php worker thread to exactly one object - in reference.
+- Using request contexts. I.e., pretending to be something like Apache.
+- Preparing the "built-in" INI.
+- Forwarding header information (`request.headers`).
+- Creating an async API to allow non-blocking usage.
 
-```js
-var php = require("v8php");
+## A possible API usage.
+```javascript
+function my_handler(request, response) {
+    var PHP = require("v8php").requestEngine,
+        proc = PHP(__dirname+"/"+request.url, {
+            max_script_execution: 100,
+            // ... snip. More options, actually INI settings.
+        });
 
-// Tell the interpreter to start up.
-php.start();
-
-// Do INI setting
-php.set("max_execution_time", 200);
-
-// Add header
-php.header("GET /index.php?r=site");
-
-// Run a script file
-php.run("myfile.php");
-
-// Copy output to local variable.
-var output = php.output;
-
-// Reset interpreter state
-php.reset();
-
-// Shut down the interpreter.
-php.shutdown();
+    proc.on("header",function(string){ response.header(string); });
+    proc.on("output",function(chunk){ response.write(chunk.toString("utf-8")); });
+    proc.on("error",function(chunk){ console.error(chunk.toString("utf-8")); });
+    proc.on("end",function(chunk){ request.end(); });
+}
 ```
 
-## How can this be useful?
-Put this extension to work within your Express application, for example. Or just utilize it in your CLI app. In my case, I am spawning a bunch of these instances and using them to serve requests.
+## Needed
+You need PHP configured with `--enable-embed` and `--enable-maintainer-zts`. We are actually using another abstraction, the embed2 SAPI, but this one is compiled in the process of this module, and linked inside. The module, unline others, is not built using `node-gyp` or `phpize`. We use `build.js` in order to do that. Its simple, but reqrueis information from both sides. You need `node-gyp` installed in order for the script to be able to pick up or download neccessary nodejs development files.
 
-## To build...
-There is `build.js` in the source tree. This is what gets ran. It picks up corresponding PHP and NodeJS headers and other ocmpiler flags. It then compiles you a .node file. `index.js` will help you to load the module.
+## Possible object structure
+```javascript
+PHP: {
+    requestEngine: [Function], // Returns an event emitter that handles HTTP-ish requests.
+    cliEngine: [Function], // Simpler interface, its like the php-cli SAPI.
+    modules: [...], // Name:Version list of all available modules. Might do that, might not. Really, depends...
+    version: "..."
+}
+```

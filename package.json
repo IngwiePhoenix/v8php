@@ -13,5 +13,8 @@
     "sapi"
   ],
   "author": "Ingwie Phoenix",
-  "license": "mit"
+  "license": "mit",
+  "dependencies": {
+    "execSync": "^1.0.1-pre"
+  }
 }

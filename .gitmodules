@@ -1,0 +1,3 @@
+[submodule "embed2-sapi"]
+	path = embed2-sapi
+	url = https://github.com/basvanbeek/embed2-sapi.git
